@@ -1,0 +1,524 @@
+~~_INPReport.CINPReport_Variables
+
+VarEnumInfo DesignEn_Enum
+   Entry 0 "Connections"
+   Entry 1 "Operations"
+   Entry 2 "Notes"
+end
+
+VarEnumInfo PerfomanceEn_Enum
+   Entry 0 "Balance"
+   Entry 1 "Composition"
+end
+
+ExtensionVariables EV
+   EnumVar "DesignEn" "DesignEn" 0 Persistent NoTriggerSolve DesignEn_Enum
+   RealVar "YstreamList" "~" "Index" 0 Persistent NoTriggerSolve
+   TextVar "Notes" "Notes" 0 Persistent NoTriggerSolve
+   TextVar "FullStreamNameList" "FullStreamNameList" 1 Persistent NoTriggerSolve
+   EnumVar "PerfomanceEn" "PerfomanceEn" 0 Persistent NoTriggerSolve PerfomanceEn_Enum
+   TextVar "InStreamNameList" "InStreamNameList" 1 Persistent NoTriggerSolve
+   RealVar "InStreamFlowrateList" "InStreamFlowrateList" "MassFlow" 1 Persistent NoTriggerSolve
+   RealVar "StreamComp" "StreamComop" "MassFraction" 2 Persistent NoTriggerSolve
+   TextVar "CompLabelName" "CompLabelName" 1 Persistent NoTriggerSolve
+   RealVar "LostFlowrateList" "LostFlowrateList" "MassFlow" 1 Persistent NoTriggerSolve
+   Message "SetBounds" "SetBounds" NoTriggerSolve
+   TextVar "OutStreamNameList" "OutStreamNameList" 1 Persistent NoTriggerSolve
+   RealVar "OutStreamFlowrateList" "OutStreamFlowrateList" "MassFlow" 1 Persistent NoTriggerSolve
+   TextVar "ComName" "ComName" 1 Persistent NoTriggerSolve
+   TextVar "ExtensionDLLVersion" "ExtensionDLLVersion" 0 Persistent NoTriggerSolve
+   TextVar "EngineDLLVersion" "EngineDLLVersion" 0 Persistent NoTriggerSolve
+   TextVar "UtilsDLLVersion" "UtilsDLLVersion" 0 Persistent NoTriggerSolve
+   RealVar "MBAlist" "MBAlist" "Index" 1 Persistent TriggerSolve
+   TextVar "InStreamName" "InStreamName" 0 Persistent NoTriggerSolve
+   TextVar "OutStreamName" "OutStreamName" 0 Persistent NoTriggerSolve
+   Message "ClearMBA" "ClearMBA" NoTriggerSolve
+   RealVar "LostPercentList" "LostPercentList" "Percent" 1 Persistent NoTriggerSolve
+   RealVar "LostAggregateList" "LostAggregateList" "Mass" 1 Persistent NoTriggerSolve
+   RealVar "LostAggregate" "LostAggregate" "Mass" 0 Persistent NoTriggerSolve
+   ExtensionType "UnitOperation:NoSwitchToDirectory"
+   ObjectDescription "Tritium Report"
+   BaseVariables "flowobj"
+end
+
+~~_INPReport.CINPReport_DefaultView
+
+SubViewMgr PageController
+   TargetMoniker ":PageNumber.0"
+   State "Design" 0.000000 0.000000 ":"
+   State "Performance" 1.000000 1.000000 ":"
+   State "About" 2.000000 2.000000 ":"
+end
+
+StaticText NameLabel
+   Area 116 10 23 8
+   Label "&Name:"
+   SourceViewMgr PageController 1
+   SourceViewMgr DesignController 1
+end
+
+TextEntry NameEntry
+   Area 142 8 75 12
+   TargetMoniker ":Name"
+   SourceViewMgr PageController 1
+   SourceViewMgr DesignController 1
+end
+
+PageTabs PageTabs
+   Area 0 170 312 16
+   TargetMoniker ":PageNumber.0"
+   StretchWidth
+   FixToBottom
+   Tab 0.000000 "Design"
+   Tab 1.000000 "Performance"
+   Tab 2.000000 "About"
+end
+
+Form Main
+   Title "%s"
+   Widget PerformanceControler
+   Widget DesignController
+   Widget PageController
+   Widget NameLabel
+   Widget NameEntry
+   Widget StatusText
+   Widget DeleteBut
+   Widget Ignored
+   Widget NameStaticText
+   Widget VersionInfoBox
+   Widget ExtensionVersion
+   Widget EngineVersion
+   Widget txtExtensionVersion
+   Widget txtEngineVersion
+   Widget ActiveXWidget1
+   Widget WebStatic
+   Widget ExtnUtilsVersionLbl
+   Widget ExtnUtilsVersion
+   Widget StreFlag
+   Widget RepFlag
+   Widget MatrixWidget1
+   Widget WorkSheetMatrix1
+   Widget GroupBox1
+   Widget PlyPicker1
+   Widget RichTextEntry1
+   Widget PlyPicker2
+   Widget CompWorksheet
+   Widget GroupBox2
+   Widget MatrixWidget3
+   Widget GroupBox3
+   Widget Set
+   Widget TextListStreamIn
+   Widget TextListStreamOut
+   Widget Button1
+   Widget PageTabs
+   Version 1
+   PageBottom PageTabs
+end
+
+StaticText StatusText
+   Area 54 192 219 10
+   TargetMoniker ":Status.1"
+   StretchWidth
+   FixToBottom
+   BackgroundColour "StatusGreen"
+   BGColourMoniker ":Count.1"
+   Align Centre
+   Framed
+end
+
+Button DeleteBut
+   Area 0 190 51 14
+   Label "&Delete"
+   FixToBottom
+   Message ":Delete"
+end
+
+CheckBox Ignored
+   Area 278 194 35 9
+   Label "Ignored"
+   TargetMoniker ":Ignored.300"
+   FixToBottom
+   FixToRight
+end
+
+StaticText NameStaticText
+   Area 16 16 54 8
+   Label "INP Tritium Report"
+   SourceViewMgr PageController 4
+end
+
+GroupBox VersionInfoBox
+   Area 16 38 212 64
+   Label "Version Info"
+   SourceViewMgr PageController 4
+end
+
+StaticText ExtensionVersion
+   Area 28 50 76 8
+   Label "HYSYS Extension version:"
+   SourceViewMgr PageController 4
+end
+
+StaticText EngineVersion
+   Area 28 66 46 8
+   Label "Engine version:"
+   SourceViewMgr PageController 4
+end
+
+TextEntry txtExtensionVersion
+   Area 114 48 100 12
+   TargetMoniker ":ExtraData.0.0(ExtensionDLLVersion)"
+   BackgroundColour "FormBG"
+   SourceViewMgr PageController 4
+   ViewOnly
+   NoBorder
+end
+
+TextEntry txtEngineVersion
+   Area 114 64 100 12
+   TargetMoniker ":ExtraData.0.0(EngineDLLVersion)"
+   BackgroundColour "FormBG"
+   SourceViewMgr PageController 4
+   ViewOnly
+   NoBorder
+end
+
+ActiveXWidget ActiveXWidget1
+   Area 216 122 37 37
+   FixToBottom
+   FixToRight
+   SourceViewMgr PageController 4
+   CLSID "{9049B123-64D1-4E1C-B75D-846D506CC168}"
+   InitializationText "72jdlcA3eiA6dA2iA2lpcfhehcA6fpaagfaahiaaheaagfaagoaaheaahiaadeagA4dA2iA2kpcfhehoaP5fpaagfaahiaaheaagf\\\naagoaaheaahjaappafA3"
+end
+
+StaticText WebStatic
+   Area 110 148 95 8
+   Label "http://www.inprocessgroup.com/"
+   FixToBottom
+   FixToRight
+   SourceViewMgr PageController 4
+end
+
+StaticText ExtnUtilsVersionLbl
+   Area 28 82 82 8
+   Label "Inprocess Extn. Utils version:"
+   SourceViewMgr PageController 4
+end
+
+TextEntry ExtnUtilsVersion
+   Area 114 82 95 12
+   TargetMoniker ":ExtraData.0.0(UtilsDLLVersion)"
+   BackgroundColour "ButtonBar"
+   SourceViewMgr PageController 4
+   ViewOnly
+   NoBorder
+end
+
+Button StreFlag
+   Area 242 48 56 18
+   Label "&Refresh"
+   SourceViewMgr PageController 1
+   SourceViewMgr DesignController 2
+end
+
+Button RepFlag
+   Area 242 80 56 18
+   Label "&Report"
+   SourceViewMgr PageController 1
+   SourceViewMgr DesignController 2
+end
+
+MatrixWidget MatrixWidget1
+   Area 98 34 123 98
+   SourceViewMgr DesignController 2
+   SourceViewMgr PageController 1
+   CellSize 30 9
+   ShowLabels Top
+   TrackSpecYMoniker ":ExtraData.0.0(YstreamList)"
+   Info FullStreamListDs
+   Info ActiveList
+end
+
+WorkSheetMatrix WorkSheetMatrix1
+   Area 70 12 234 146
+   StretchWidth
+   SourceViewMgr PageController 2
+   SourceViewMgr PerformanceControler 1
+   CellSize 45 9
+   ShowLabels Top
+   ShowUnits Left
+   Info MBAnumberList
+   Info INstreamNameList
+   Info INflowList
+   Info OUTstreamName
+   Info OUTflowList
+   Info LossesFlowList
+   Info PercLostList
+   Info AggregateList
+end
+
+GroupBox GroupBox1
+   Area 74 18 240 132
+   Label "&Operation selection"
+   StretchWidth
+   StretchHeight
+   SourceViewMgr DesignController 2
+   SourceViewMgr PageController 1
+end
+
+PlyPicker PlyPicker1
+   Area 6 4 60 150
+   TargetMoniker ":ExtraData.0.0(DesignEn)"
+   StretchHeight
+   SourceViewMgr DesignController 7
+   SourceViewMgr PageController 1
+   Title "Design"
+   EnumMoniker ":ExtraData.0.0(DesignEn)"
+end
+
+SubViewMgr DesignController
+   TargetMoniker ":ExtraData.0.0(DesignEn)"
+   State "Connections" 0.000000 0.000000 ":"
+   State "Operations" 1.000000 1.000000 ":"
+   State "Notes" 2.000000 2.000000 ":"
+end
+
+RichTextEntry RichTextEntry1
+   Area 68 6 247 151
+   TargetMoniker ":ExtraData.0.0(Notes)"
+   StretchWidth
+   StretchHeight
+   SourceViewMgr DesignController 4
+   SourceViewMgr PageController 1
+end
+
+PlyPicker PlyPicker2
+   Area 2 6 60 160
+   TargetMoniker ":ExtraData.0.0(PerfomanceEn)"
+   StretchHeight
+   SourceViewMgr PageController 2
+   SourceViewMgr PerformanceControler 7
+   Title "Performance"
+   EnumMoniker ":ExtraData.0.0(PerfomanceEn)"
+end
+
+WorkSheetMatrix CompWorksheet
+   Area 78 12 222 146
+   StretchWidth
+   StretchHeight
+   SourceViewMgr PageController 2
+   SourceViewMgr PerformanceControler 2
+   CellSize 55 9
+   LeftLabelWidth 55
+   ShowLabels Left
+   ShowUnits Left
+   Direction Horizontal
+   Info StreamNameDS1
+   Info StreamComp
+end
+
+SubViewMgr PerformanceControler
+   TargetMoniker ":ExtraData.0.0(PerfomanceEn)"
+   State "Conditions" 0.000000 0.000000 ":"
+   State "Composition" 1.000000 1.000000 ":"
+end
+
+GroupBox GroupBox2
+   Area 66 0 244 166
+   Label "Tritium Balance"
+   StretchWidth
+   StretchHeight
+   SourceViewMgr PageController 2
+   SourceViewMgr PerformanceControler 1
+end
+
+MatrixWidget MatrixWidget3
+   Area 114 40 161 92
+   SourceViewMgr PageController 1
+   SourceViewMgr DesignController 1
+   CellSize 70 9
+   ShowLabels Top
+   Info MBAIndicesList
+   Info InputStreamNameList
+   Info OutStreamNameList
+end
+
+GroupBox GroupBox3
+   Area 76 28 234 136
+   Label "Mass Balance Area (MBA) Selection"
+   StretchWidth
+   StretchHeight
+   SourceViewMgr PageController 1
+   SourceViewMgr DesignController 1
+end
+
+Button Set
+   Area 82 138 48 18
+   Label "&Set Bounds"
+   BackgroundColour "ButtonBar"
+   SourceViewMgr PageController 1
+   SourceViewMgr DesignController 1
+   Message ":ExtraData.0.0(SetBounds)"
+end
+
+TextMatrixInfo StreamNameDS1
+   Moniker ":ExtraData.0.0.[](ComName)"
+   Label "Names"
+   ViewOnly True
+end
+
+NumericMatrixInfo StreamComp
+   Moniker ":ExtraData.0.0.[].[](StreamComp)"
+   LabelMoniker ":ExtraData.0.0.[](CompLabelName)"
+   ViewOnly True
+end
+
+TextList TextListStreamIn
+   Area 136 138 68 18
+   TargetMoniker ":ExtraData.0.0.[](FullStreamNameList)"
+   SourceViewMgr DesignController 1
+   SourceViewMgr PageController 1
+   TrackSpecMoniker ":ExtraData.0.0(InStreamName)"
+   StickyLastEntry
+   MatchByAbbrev
+end
+
+TextList TextListStreamOut
+   Area 206 138 68 18
+   TargetMoniker ":ExtraData.0.0.[](FullStreamNameList)"
+   SourceViewMgr DesignController 1
+   SourceViewMgr PageController 1
+   TrackSpecMoniker ":ExtraData.0.0(OutStreamName)"
+end
+
+NumericMatrixInfo MBAIndicesList
+   Moniker ":ExtraData.0.0.[](MBAlist)"
+   Label "MBA"
+   Width 20
+end
+
+TextMatrixInfo InputStreamNameList
+   Moniker ":ExtraData.0.0.[](InStreamNameList)"
+   Label "Input Stream"
+end
+
+TextMatrixInfo OutStreamNameList
+   Moniker ":ExtraData.0.0.[](OutStreamNameList)"
+   Label "Output Streams"
+end
+
+Button Button1
+   Area 280 138 25 18
+   Label "&Clear"
+   SourceViewMgr DesignController 1
+   SourceViewMgr PageController 1
+   Message ":ExtraData.0.0(ClearMBA)"
+end
+
+TextMatrixInfo FullStreamListDs
+   Label "Operation"
+   Width 90
+end
+
+BooleanMatrixInfo ActiveList
+   Label "Active"
+end
+
+NumericMatrixInfo MBAnumberList
+   Moniker ":ExtraData.0.0.[](MBAlist)"
+   Label "MBA"
+   Width 20
+end
+
+TextMatrixInfo INstreamNameList
+   Moniker ":ExtraData.0.0.[](InStreamNameList)"
+   Label "Stream IN"
+   ViewOnly True
+end
+
+NumericMatrixInfo INflowList
+   Moniker ":ExtraData.0.0.[](InStreamFlowrateList)"
+   Format "%.3g"
+   Label "T flow IN"
+   Width 55
+   ViewOnly True
+   Units "g/h"
+   ShowCellUnits True
+end
+
+TextMatrixInfo OUTstreamName
+   Moniker ":ExtraData.0.0.[](OutStreamNameList)"
+   Label "Stream OUT"
+end
+
+NumericMatrixInfo OUTflowList
+   Moniker ":ExtraData.0.0.[](OutStreamFlowrateList)"
+   Format "%.3g"
+   Label "T flow OUT"
+   Width 55
+   Units "g/h"
+   ShowCellUnits True
+end
+
+NumericMatrixInfo LossesFlowList
+   Moniker ":ExtraData.0.0.[](LostFlowrateList)"
+   Format "%.3g"
+   Label "Losses"
+   Width 55
+   Units "g/h"
+   ShowCellUnits True
+end
+
+NumericMatrixInfo PercLostList
+   Moniker ":ExtraData.0.0.[](LostPercentList)"
+   Format "%6.4f"
+   Label "% Lost"
+   ShowCellUnits True
+end
+
+NumericMatrixInfo AggregateList
+   Moniker ":ExtraData.0.0.[](LostAggregateList)"
+   Format "%.4g"
+   Label "Aggregate Lost"
+   Width 55
+   Units "g"
+   ShowCellUnits True
+end
+
+~~Variables
+
+~~__INPReport.CINPReport_PFDIcon
+
+PFDExtensionIcon main
+   Add Icon1
+
+end
+
+PFDPointArray Extension3D1Points1
+   Point 0 36
+   Point 36 72
+   Point 72 36
+   Point 36 0   
+   Point 0 36
+end
+
+PFDIconSection IconSection1
+   Size 72 72
+   Rect 8 8 64 64 shade2
+   Rect 8 8 64 64 line7
+   Poly Extension3D1Points1 shade2
+   Poly Extension3D1Points1 line7
+   BasedText 36 36 0 0 "RT" C 2 MaterialFont
+end
+
+PFDIconInfo Icon1
+   ObjectType INPReport.CINPReport
+   Name IconInfo1
+   BasePoint 28 28
+   Label 40 0 W
+   Section IconSection1
+   ThreeD
+end
+
+
