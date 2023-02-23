@@ -38,6 +38,9 @@ Private edfLostFlowrateList As InternalRealFlexVariable
 Private edfLostPercentList As InternalRealFlexVariable
 Private edfLostAggregateList As InternalRealFlexVariable
 Private edfLostAggregate As InternalRealVariable
+Private edfTritiumInventoryList As InternalRealFlexVariable
+Private edfTritiumInventoryTotal As InternalRealVariable
+Private edfNetTritiumFlowInList As InternalRealFlexVariable
 
 Private edfCompLabelName As InternalTextFlexVariable
 Private edfStreamComp As InternalRealFlexVariable
@@ -52,8 +55,13 @@ Private edfUtilsDLLVersion As InternalTextVariable
 '                                  VB Variables
 '
 '****************************************************************************
-Private Const M_T2 = 6.032098555
 Private Const M_H2 = 2.01588
+Private Const M_HT = 4.02399
+Private Const M_D2 = 4.028203556
+Private Const M_DT = 5.030151056
+Private Const M_T2 = 6.032098555
+Private convTinHTgram As Double
+Private convTinDTgram As Double
 Private idxH2 As Long, idxHD As Long, idxHT As Long
 Private idxD2 As Long, idxDT As Long, idxT2 As Long
 Private nComp As Long
@@ -61,10 +69,11 @@ Private nComp As Long
 '... Global variables for MBA accounting ...
 Private UserVarTAG As String
 '   Declare next vectors as global to avoid resizing them each iteration in dynamics
-Private inflowrate() As Double, outflowrate() As Double
-Private lostflowrate() As Double, extractedflowrate() As Double
+Private inflowrate() As Double, outflowrate() As Double, permflowrate() As Double
+Private lostflowrate() As Double, netinflowrate() As Double
 Private lostpercentage() As Double, aggregatelost() As Double, aggregatelosttotal As Double
-Private streaminlist() As ProcessStream, streamoutlist() As ProcessStream
+Private tritiuminventorytotal As Double, tritiuminventory() As Double, netinflowrateOld() As Double
+Private streaminlist() As Variant, streamoutlist() As Variant, streampermlist() As Variant
 Private OpNamesMBA() As String
 Private OpActive() As Long      ' 0 == no user var, 1 == user var, -1 == no Op
 Private flagGoal As Boolean     ' Indicates goal stream reached at some point in a MBA
@@ -144,6 +153,8 @@ Private Function ExtnUnitOperation_Initialize(ByVal Container As HYSYS.ExtnUnitO
     
     ' Define user variable tags used
     UserVarTAG = "PermeationT"
+    convTinHTgram = (M_T2 / 2) / M_HT
+    convTinDTgram = (M_T2 / 2) / M_DT
     
     If IsRecalling Then
         'm_InpExtnUtils.InitType = 2
@@ -177,7 +188,7 @@ On Error GoTo ErrorCatch:
     Set IRV = myContainer.FindVariable("DesignEn")
     '...Calulating pass...
     IsForgetting = False
-    'FUTURO CHECKEO DE e.g QUE LOS STREAMS IN Y OUT CORRESPONDEN A LA MISMA LÍNEA
+    'FUTURO CHECKEO DE e.g QUE LOS STREAMS IN Y OUT CORRESPONDEN A LA MISMA Lï¿½NEA
     If Not CheckInputs Then Exit Sub
     If Not GatherData Then
         Call myContainer.Trace(myContainer.Name & ": Error while Gathering Data in Execute.", False)
@@ -228,8 +239,11 @@ On Error GoTo ERROR_CATCH
             edfLostFlowrateList.SetBounds 0
             edfLostPercentList.SetBounds 0
             edfLostAggregateList.SetBounds 0
+            edfTritiumInventoryList.SetBounds 0
+            edfTritiumInventoryTotal.SetBounds 0
+            edfNetTritiumFlowInList.SetBounds 0
     End Select
-     myContainer.SolveComplete
+    myContainer.SolveComplete
     Exit Sub
 ERROR_CATCH:
     Call myContainer.Trace(myContainer.Name & ": Error in Variable Changed for variable " & Variable.tag & ".", False)
@@ -258,6 +272,9 @@ Private Sub ExtensionObject_Terminate()
    Set edfLostPercentList = Nothing
    Set edfLostAggregateList = Nothing
    Set edfLostAggregate = Nothing
+   Set edfTritiumInventoryList = Nothing
+   Set edfTritiumInventoryTotal = Nothing
+   Set edfNetTritiumFlowInList = Nothing
    
    Set edfCompLabelName = Nothing
    Set edfStreamComp = Nothing
@@ -305,6 +322,9 @@ Private Sub PointEdfVariables()
         Set edfLostPercentList = .FindVariable("LostPercentList").Variable
         Set edfLostAggregateList = .FindVariable("LostAggregateList").Variable
         Set edfLostAggregate = .FindVariable("LostAggregate").Variable
+        Set edfTritiumInventoryList = .FindVariable("TritiumInventoryList").Variable
+        Set edfTritiumInventoryTotal = .FindVariable("TritiumInventoryTotal").Variable
+        Set edfNetTritiumFlowInList = .FindVariable("NetTritiumFlowInList").Variable
         
         Set edfCompLabelName = .FindVariable("CompLabelName").Variable
         Set edfStreamComp = .FindVariable("StreamComp").Variable
@@ -331,7 +351,10 @@ Private Sub setEDFmodifyState()
     edfLostPercentList.SetModifyState vsCalculated
     edfLostAggregateList.SetModifyState vsCalculated
     edfLostAggregate.SetModifyState vsCalculated
-    
+    edfTritiumInventoryList.SetModifyState vsCalculated
+    edfTritiumInventoryTotal.SetModifyState vsCalculated
+    edfNetTritiumFlowInList.SetModifyState vsCalculated
+
     edfCompLabelName.SetModifyState vsCalculated
     edfStreamComp.SetModifyState vsCalculated
     edfComName.SetModifyState vsCalculated
@@ -339,9 +362,9 @@ Private Sub setEDFmodifyState()
     edfExtensionDLLVersion.SetModifyState vsSpecified
     edfEngineDLLVersion.SetModifyState vsSpecified
     edfUtilsDLLVersion.SetModifyState vsSpecified
-    edfExtensionDLLVersion.value = "5.100"
-    edfEngineDLLVersion = "1111"
-    edfUtilsDLLVersion = "2.0"
+    edfExtensionDLLVersion.value = "6.0"
+    'edfEngineDLLVersion = "1111"
+    'edfUtilsDLLVersion = "2.0"
 End Sub
 Private Sub iniCompIndex()
 ' Get index for components that can permeate (based on basis manager)
@@ -382,15 +405,18 @@ Private Sub iniVariables()
     '' Input check
     If nMBA < 1 Then Exit Sub
     '' Sizing/Bounding
-    ReDim streaminlist(nMBA - 1), streamoutlist(nMBA - 1)
-    ReDim inflowrate(nMBA - 1), outflowrate(nMBA - 1)
-    ReDim lostflowrate(nMBA - 1), extractedflowrate(nMBA - 1)
+    ReDim streaminlist(nMBA - 1), streamoutlist(nMBA - 1), streampermlist(nMBA - 1)
+    ReDim inflowrate(nMBA - 1), outflowrate(nMBA - 1), permflowrate(nMBA - 1)
+    ReDim lostflowrate(nMBA - 1), netinflowrate(nMBA - 1), netinflowrateOld(nMBA - 1)
     ReDim lostpercentage(nMBA - 1), aggregatelost(nMBA - 1)
+    ReDim tritiuminventory(nMBA - 1)
     edfInStreamFlowrateList.SetBounds nMBA
     edfOutStreamFlowrateList.SetBounds nMBA
     edfLostFlowrateList.SetBounds nMBA
     edfLostPercentList.SetBounds nMBA
     edfLostAggregateList.SetBounds nMBA
+    edfTritiumInventoryList.SetBounds nMBA
+    edfNetTritiumFlowInList.SetBounds nMBA
     '' Get stream objects by passing its string name
     For i = 0 To nMBA - 1
         Set streaminlist(i) = myContainer.Flowsheet.MaterialStreams.Item(edfInStreamNameList(i))
@@ -398,15 +424,24 @@ Private Sub iniVariables()
     Next i
     '' Check empty values to initialize (This concerns Dynamic aggregation of losses)
     ' Get current list
-    aggregatelost = edfLostAggregateList.GetValues("kg")
+    aggregatelost = edfLostAggregateList.Values
+    tritiuminventory = edfTritiumInventoryList.Values
+    netinflowrateOld = edfNetTritiumFlowInList.Values ' TODO: UNITS??? Do we get old values when re-opening HYSYS?
     For i = 0 To nMBA - 1
         ' Check if some values are empty (-32767) and initialize them to zero
         If aggregatelost(i) = -32767 Then
             aggregatelost(i) = 0
         End If
+        If tritiuminventory(i) = -32767 Then
+            tritiuminventory(i) = 0
+        End If
+        If netinflowrateOld(i) = -32767 Then
+            netinflowrateOld(i) = 0
+        End If
     Next i
     ' Set current values of EDF to the updated ones
     edfLostAggregateList.SetValues aggregatelost
+    edfTritiumInventoryList.SetValues tritiuminventory
 End Sub
 
 
@@ -503,11 +538,11 @@ Private Sub Path(currStream As ProcessStream, endStream As ProcessStream, MBA)
                 flagGoal = True
             Case 1
             ' Boundary reached, but not the goal end stream
-                ' SI NO HEMOS ALCANZADO EL END STREAM EN OTRO CAMINO, HARÍA FALTA UNA FLAG
+                ' SI NO HEMOS ALCANZADO EL END STREAM EN OTRO CAMINO, HARï¿½A FALTA UNA FLAG
                 ' DE AVISO AL USUARIO
             Case 2
             ' REACHED THE SAME BRANCH AS BEFORE. IT IS OK TO EXIT THIS PATH
-            ' ANALIZAR SI VARIOS CASE TIENEN LA MISMA ACCIÓN COMO RESULTADO Y JUNTARLOS (1 Y 2)
+            ' ANALIZAR SI VARIOS CASE TIENEN LA MISMA ACCIï¿½N COMO RESULTADO Y JUNTARLOS (1 Y 2)
             Case 3
             ' More than 2 streams in next operation
                 ' First we account the number of paths and save the last operation
