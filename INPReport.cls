@@ -706,30 +706,40 @@ On Error GoTo errorHandler
     For i = 0 To nMBA - 1
         ' First account user variables
         lostflowrate(i) = 0
-        For j = 0 To m - 1
-            ' Accumulate values of permeated tritium user variables
-            If OpActive(i, j) = 1 Then
-                Set currOp = myContainer.SimulationCase.Flowsheet.Operations.Item(OpNamesMBA(i, j))
-                Set currUserVar = currOp.GetUserVariable(myTag).Variable
-                ' Identify User Variable units and process it consequently (UnitConversionType is Enum type of integers)
-                Select Case currUserVar.UnitConversionType
-                    Case 3      ' Molar Flow = kmol/s
-                        lostflowrate(i) = lostflowrate(i) + currUserVar.value * M_T2
-                    Case 4      ' Mass Flow = kg/s
-                        lostflowrate(i) = lostflowrate(i) + currUserVar.value
-                    Case Else   ' Otherwise
-                        MsgBox ("Some error occurred with user variable " + myTag + " units.")
-                        Exit Sub
-                End Select
-            End If
-        Next j
+        ' CURRENTLY NOT ACCOUNTING FOR UNDESIRED LOSSES ******
+        'For j = 0 To m - 1
+        '    ' Accumulate values of permeated tritium user variables
+        '    If OpActive(i, j) = 1 Then
+        '        Set currOp = myContainer.SimulationCase.Flowsheet.Operations.Item(OpNamesMBA(i, j))
+        '        Set currUserVar = currOp.GetUserVariable(myTag).Variable
+        '        ' Identify User Variable units and process it consequently (UnitConversionType is Enum type of integers)
+        '        Select Case currUserVar.UnitConversionType
+        '            Case 3      ' Molar Flow = kmol/s
+        '                lostflowrate(i) = lostflowrate(i) + currUserVar.value * M_T2
+        '            Case 4      ' Mass Flow = kg/s
+        '                lostflowrate(i) = lostflowrate(i) + currUserVar.value
+        '            Case Else   ' Otherwise
+        '                MsgBox ("Some error occurred with user variable " + myTag + " units.")
+        '                Exit Sub
+        '        End Select
+        '    End If
+        'Next j
+        ' *****************************************************
         ' Compute the remaining flow rates (mass, kg/s)
-        inflowrate(i) = streaminlist(i).ComponentMassFlowValue(idxT2)
-        outflowrate(i) = streamoutlist(i).ComponentMassFlowValue(idxT2)
-        extractedflowrate(i) = inflowrate(i) - outflowrate(i) - lostflowrate(i)
+        '   use second parenthesis to avoid errors while trying to compound properties
+        '   remember to do conversions to account only for tritium
+        inflowrate(i) = streaminlist(i).ComponentMassFlowValue()(idxT2) _
+                      + streaminlist(i).ComponentMassFlowValue()(idxHT) * convTinHTgram _
+                      + streaminlist(i).ComponentMassFlowValue()(idxDT) * convTinDTgram
+        outflowrate(i) = streamoutlist(i).ComponentMassFlowValue()(idxT2) _
+                       + streamoutlist(i).ComponentMassFlowValue()(idxHT) * convTinHTgram _
+                       + streamoutlist(i).ComponentMassFlowValue()(idxDT) * convTinDTgram
+        permflowrate(i) = streampermlist(i).ComponentMassFlowValue()(idxT2) _
+                        + streampermlist(i).ComponentMassFlowValue()(idxHT) * convTinHTgram _
+                        + streampermlist(i).ComponentMassFlowValue()(idxDT) * convTinDTgram
+        netinflowrate(i) = inflowrate(i) - outflowrate(i) - lostflowrate(i) - permflowrate(i)
         ' Definition of % Tritium lost = losses / inlet. [NOTE: product by 100 is needed for percentage]
-        
-        ' Avoid division by zero setting a negative number to alert (we do not want to stop all the simlation always)
+        '   Avoid division by zero setting a negative number to alert (we do not want to stop all the simulation always)
         If inflowrate(i) = 0 Then
             lostpercentage(i) = -0
         Else
@@ -749,19 +759,32 @@ End Sub
 Private Sub DynamicAccounting(deltaT)
 ' Calculate values of aggregate MASS tritium inventory loss along simulation
 ' Needs 'timestep' to interpolate
- Dim i As Long
+Dim i As Long
     '' Input check
     If nMBA < 1 Then Exit Sub
     ' Get aggregate flow
-    aggregatelosttotal = 0
+    'aggregatelosttotal = 0
+    tritiuminventorytotal = 0
     For i = 0 To nMBA - 1
-        ' Dynamic computation of lost flows
-        aggregatelost(i) = aggregatelost(i) + lostflowrate(i) * deltaT
-        aggregatelosttotal = aggregatelosttotal + aggregatelost(i)
+        ' Dynamic computation of lost flows - CURRENTLY NOT ACCOUNTING FOR UNDESIRED LOSSES
+        'aggregatelost(i) = aggregatelost(i) + lostflowrate(i) * deltaT
+        'aggregatelosttotal = aggregatelosttotal + aggregatelost(i)
+        ' Dynamic computation of tritium inventory
+        '  Integrate the inventory using the trapezoidal rule
+        tritiuminventory(i) = tritiuminventory(i) + deltaT * (netinflowrate(i) + netinflowrateOld(i)) / 2  ' TODO: check both deltaT and netinflowrates use same TIME units
+        tritiuminventorytotal = tritiuminventorytotal + tritiuminventory(i)
     Next i
+    If tritiuminventorytotal < 0 Then
+        ' Since edfTritiumInventoryTotal is of type "Mass", it cannot be negative
+        tritiuminventorytotal = 0
+    End If
+    netinflowrateOld = netinflowrate  ' store previous net flow for next time step
     ' Fix values to EDF variables
-    edfLostAggregateList.SetValues aggregatelost
-    edfLostAggregate.SetValue aggregatelosttotal
+    'edfLostAggregateList.SetValues aggregatelost
+    'edfLostAggregate.SetValue aggregatelosttotal
+    edfTritiumInventoryList.SetValues tritiuminventory
+    edfTritiumInventoryTotal.SetValue tritiuminventorytotal
+    edfNetTritiumFlowInList.SetValues netinflowrate
 End Sub
 
 
