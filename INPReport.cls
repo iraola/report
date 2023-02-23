@@ -502,7 +502,7 @@ Private Sub collectMBAdata()
 ' DEEPER LOOP
 ' Loop over process lines (MASS BALANCE AREAS defined by IN stream and OUT stream in EDF)
 ' and assess tritium losses in them
- Dim currStream As ProcessStream
+ Dim currStream As Variant
  Dim currOp As Variant
  Dim i As Long, j As Long
 On Error GoTo errorHandler
@@ -547,6 +547,7 @@ Private Sub collectPermStreams()
 errorHandler:
     MsgBox "Error in " + myContainer.Name + ". " + Err.Description
 End Sub
+Private Sub Path(currStream, endStream, MBA)
  Dim currOp As Variant, pendOp As Variant
  Dim j As Long, pathNum As Long, caseFlag As Long
     ' The starting point is the stream in the 'streaminlist'
@@ -583,8 +584,8 @@ End Sub
             Case 4
         End Select
 End Sub
-Private Function linearPath(ByRef currStream As ProcessStream, ByRef currOp, _
-                            ByVal endStream As ProcessStream, ByVal currMBA As Long) As Long
+Private Function linearPath(ByRef currStream, ByRef currOp, ByVal endStream, _
+                            ByVal currMBA As Long) As Long
 ' Go over a process linear line given the starting stream 'currStream'
 ' and current MBA 'currMBA' for accounting purposes
 ' Then, we store all operations inside the path in the matrix 'OpNamesPath'
