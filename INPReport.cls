@@ -493,6 +493,8 @@ Private Sub preAccounting()
     Call iniVariables
     ' Loop over flowsheet to obtain a matrix of operations  -> matrix 'opNamesMBA'
     Call collectMBAdata
+    ' Collect permeating streams for each MBA
+    Call collectPermStreams
     ' Build operation-wise matrix from previous step        -> matrix 'OpActive'
     Call BuildActiveOpsMatrix(UserVarTAG)
 End Sub
@@ -524,7 +526,27 @@ errorHandler:
     MsgBox "Error in " + myContainer.Name + ". " + Err.Description
     'myContainer.SimulationCase.Solver.Integrator.Reset
 End Sub
-Private Sub Path(currStream As ProcessStream, endStream As ProcessStream, MBA)
+Private Sub collectPermStreams()
+    ' Collect streams whose name starts by the number of the MBA: 10, 11, 12 and ends with 'out'
+    Dim i As Long, j As Long, nStreams As Integer, stream As Variant, stageNum As String
+    On Error GoTo errorHandler
+    ' Input check
+    If nMBA < 1 Then Exit Sub
+    nStreams = myContainer.Flowsheet.MaterialStreams.Count
+    For i = 0 To nMBA - 1
+        ' Stringify stage num for search. 0 > 10, 1 > 11, 2 > 12
+        stageNum = CStr(i + 10)
+        For j = 0 To nStreams - 1
+            Set stream = myContainer.Flowsheet.MaterialStreams.Item(j)
+            If Right(stream.Name, 4) = "-out" And Left(stream.Name, 3) = stageNum + "-" Then
+                Set streampermlist(i) = stream
+            End If
+        Next
+    Next
+    Exit Sub
+errorHandler:
+    MsgBox "Error in " + myContainer.Name + ". " + Err.Description
+End Sub
  Dim currOp As Variant, pendOp As Variant
  Dim j As Long, pathNum As Long, caseFlag As Long
     ' The starting point is the stream in the 'streaminlist'
