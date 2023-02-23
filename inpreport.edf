@@ -36,6 +36,9 @@ ExtensionVariables EV
    RealVar "LostPercentList" "LostPercentList" "Percent" 1 Persistent NoTriggerSolve
    RealVar "LostAggregateList" "LostAggregateList" "Mass" 1 Persistent NoTriggerSolve
    RealVar "LostAggregate" "LostAggregate" "Mass" 0 Persistent NoTriggerSolve
+   RealVar "TritiumInventoryList" "TritiumInventoryList" "Mass" 1 Persistent NoTriggerSolve
+   RealVar "TritiumInventoryTotal" "Tritium Inventory" "Mass" 0 Persistent NoTriggerSolve
+   RealVar "NetTritiumFlowInList" "NetTritiumFlowInList" "MassFlow" 1 Persistent NoTriggerSolve
    ExtensionType "UnitOperation:NoSwitchToDirectory"
    ObjectDescription "Tritium Report"
    BaseVariables "flowobj"
@@ -256,6 +259,7 @@ WorkSheetMatrix WorkSheetMatrix1
    Info LossesFlowList
    Info PercLostList
    Info AggregateList
+   Info InventoryList
 end
 
 GroupBox GroupBox1
@@ -481,6 +485,15 @@ NumericMatrixInfo AggregateList
    Moniker ":ExtraData.0.0.[](LostAggregateList)"
    Format "%.4g"
    Label "Aggregate Lost"
+   Width 55
+   Units "g"
+   ShowCellUnits True
+end
+
+NumericMatrixInfo InventoryList
+   Moniker ":ExtraData.0.0.[](TritiumInventoryList)"
+   Format "%.4g"
+   Label "Inventory"
    Width 55
    Units "g"
    ShowCellUnits True
