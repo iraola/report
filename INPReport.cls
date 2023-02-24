@@ -426,7 +426,7 @@ Private Sub iniVariables()
     ' Get current list
     aggregatelost = edfLostAggregateList.Values
     tritiuminventory = edfTritiumInventoryList.Values
-    netinflowrateOld = edfNetTritiumFlowInList.Values ' TODO: UNITS??? Do we get old values when re-opening HYSYS?
+    netinflowrateOld = edfNetTritiumFlowInList.Values
     For i = 0 To nMBA - 1
         ' Check if some values are empty (-32767) and initialize them to zero
         If aggregatelost(i) = -32767 Then
@@ -771,7 +771,7 @@ Dim i As Long
         'aggregatelosttotal = aggregatelosttotal + aggregatelost(i)
         ' Dynamic computation of tritium inventory
         '  Integrate the inventory using the trapezoidal rule
-        tritiuminventory(i) = tritiuminventory(i) + deltaT * (netinflowrate(i) + netinflowrateOld(i)) / 2  ' TODO: check both deltaT and netinflowrates use same TIME units
+        tritiuminventory(i) = tritiuminventory(i) + deltaT * (netinflowrate(i) + netinflowrateOld(i)) / 2
         tritiuminventorytotal = tritiuminventorytotal + tritiuminventory(i)
     Next i
     If tritiuminventorytotal < 0 Then
@@ -973,7 +973,7 @@ Public Function PostProcessStates(Dtime As Double) As Boolean
     ' (Low frequency as it is only informative and does not influence the simulation results)
     Call accounting(UserVarTAG)
     ' Call aggregate accounting
-    Call DynamicAccounting(Dtime)  ' TODO: not sure if Dtime is different from the one at StepEnergy, PreProcessStates...
+    Call DynamicAccounting(Dtime)
     ' Set states of tables to "Calculated" (black typing in HYSYS interface, not blue)
     PostProcessStates = True
 End Function
