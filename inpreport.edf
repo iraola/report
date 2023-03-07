@@ -33,6 +33,7 @@ ExtensionVariables EV
    TextVar "InStreamName" "InStreamName" 0 Persistent NoTriggerSolve
    TextVar "OutStreamName" "OutStreamName" 0 Persistent NoTriggerSolve
    Message "ClearMBA" "ClearMBA" NoTriggerSolve
+   Message "ClearInventory" "Clear Inventory" NoTriggerSolve
    RealVar "LostPercentList" "LostPercentList" "Percent" 1 Persistent NoTriggerSolve
    RealVar "LostAggregateList" "LostAggregateList" "Mass" 1 Persistent NoTriggerSolve
    RealVar "LostAggregate" "LostAggregate" "Mass" 0 Persistent NoTriggerSolve
@@ -43,6 +44,7 @@ ExtensionVariables EV
    ObjectDescription "Tritium Report"
    BaseVariables "flowobj"
 end
+
 
 ~~_INPReport.CINPReport_DefaultView
 
@@ -113,6 +115,7 @@ Form Main
    Widget TextListStreamIn
    Widget TextListStreamOut
    Widget Button1
+   Widget ButtonClearInv
    Widget PageTabs
    Version 1
    PageBottom PageTabs
@@ -244,7 +247,7 @@ MatrixWidget MatrixWidget1
 end
 
 WorkSheetMatrix WorkSheetMatrix1
-   Area 70 12 234 146
+   Area 70 12 234 110
    StretchWidth
    SourceViewMgr PageController 2
    SourceViewMgr PerformanceControler 1
@@ -497,6 +500,13 @@ NumericMatrixInfo InventoryList
    Width 55
    Units "g"
    ShowCellUnits True
+end
+
+Button ButtonClearInv
+   Area 154 134 51 14
+   Label "&Clear Inventory"
+   SourceViewMgr PageController 2
+   Message ":ExtraData.0.0(ClearInventory)"
 end
 
 ~~Variables

@@ -188,7 +188,7 @@ On Error GoTo ErrorCatch:
     Set IRV = myContainer.FindVariable("DesignEn")
     '...Calulating pass...
     IsForgetting = False
-    'FUTURO CHECKEO DE e.g QUE LOS STREAMS IN Y OUT CORRESPONDEN A LA MISMA LÍNEA
+    'FUTURO CHECKEO DE e.g QUE LOS STREAMS IN Y OUT CORRESPONDEN A LA MISMA Lï¿½NEA
     If Not CheckInputs Then Exit Sub
     If Not GatherData Then
         Call myContainer.Trace(myContainer.Name & ": Error while Gathering Data in Execute.", False)
@@ -242,6 +242,16 @@ On Error GoTo ERROR_CATCH
             edfTritiumInventoryList.SetBounds 0
             edfTritiumInventoryTotal.SetBounds 0
             edfNetTritiumFlowInList.SetBounds 0
+        Case "ClearInventory"
+            ' Set inventory variables and EDF-related variables to zero
+            Dim i As Integer
+            ReDim tritiuminventory(nMBA - 1)
+            For i = 0 To nMBA - 1
+                tritiuminventory(i) = 0
+            Next
+            tritiuminventorytotal = 0
+            edfTritiumInventoryList.SetValues tritiuminventory
+            edfTritiumInventoryTotal.SetValue tritiuminventorytotal
     End Select
     myContainer.SolveComplete
     Exit Sub
@@ -561,11 +571,11 @@ Private Sub Path(currStream, endStream, MBA)
                 flagGoal = True
             Case 1
             ' Boundary reached, but not the goal end stream
-                ' SI NO HEMOS ALCANZADO EL END STREAM EN OTRO CAMINO, HARÍA FALTA UNA FLAG
+                ' SI NO HEMOS ALCANZADO EL END STREAM EN OTRO CAMINO, HARï¿½A FALTA UNA FLAG
                 ' DE AVISO AL USUARIO
             Case 2
             ' REACHED THE SAME BRANCH AS BEFORE. IT IS OK TO EXIT THIS PATH
-            ' ANALIZAR SI VARIOS CASE TIENEN LA MISMA ACCIÓN COMO RESULTADO Y JUNTARLOS (1 Y 2)
+            ' ANALIZAR SI VARIOS CASE TIENEN LA MISMA ACCIï¿½N COMO RESULTADO Y JUNTARLOS (1 Y 2)
             Case 3
             ' More than 2 streams in next operation
                 ' First we account the number of paths and save the last operation
